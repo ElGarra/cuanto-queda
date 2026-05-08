@@ -18,22 +18,40 @@ async function main() {
     },
   })
 
-  const passwordHash = await bcrypt.hash(
-    process.env.ADMIN_SEED_PASSWORD ?? 'admin123',
-    10
-  )
-
+  // Admin (Joaquin — full access)
+  const adminHash = await bcrypt.hash(process.env.ADMIN_SEED_PASSWORD ?? 'admin123', 10)
   await prisma.weddingAdmin.upsert({
     where: { weddingId_email: { weddingId: wedding.id, email: 'joaquin.castanos@gmail.com' } },
     update: {},
     create: {
       weddingId: wedding.id,
       email: 'joaquin.castanos@gmail.com',
-      passwordHash,
+      passwordHash: adminHash,
+      role: 'ADMIN',
+      name: 'Joaquin',
     },
   })
 
-  console.log(`✓ Wedding "${wedding.slug}" ready`)
+  // Couple accounts
+  const coupleHash = await bcrypt.hash(process.env.COUPLE_SEED_PASSWORD ?? 'novios123', 10)
+  for (const { email, name } of [
+    { email: 'florencia@example.com', name: 'Florencia' },
+    { email: 'matias@example.com',    name: 'Matias' },
+  ]) {
+    await prisma.weddingAdmin.upsert({
+      where: { weddingId_email: { weddingId: wedding.id, email } },
+      update: {},
+      create: {
+        weddingId: wedding.id,
+        email,
+        passwordHash: coupleHash,
+        role: 'COUPLE',
+        name,
+      },
+    })
+  }
+
+  console.log(`✓ Wedding "${wedding.slug}" seeded with 1 admin + 2 couple accounts`)
 }
 
 main()

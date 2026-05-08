@@ -40,15 +40,23 @@ model Wedding {
   @@index([domain])
 }
 
+enum AdminRole {
+  ADMIN
+  COUPLE
+}
+
 model WeddingAdmin {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   weddingId    String
-  wedding      Wedding  @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  wedding      Wedding   @relation(fields: [weddingId], references: [id], onDelete: Cascade)
   email        String
   passwordHash String
-  createdAt    DateTime @default(now())
+  role         AdminRole @default(COUPLE)
+  name         String?
+  createdAt    DateTime  @default(now())
 
   @@unique([weddingId, email])
+  @@index([weddingId, role])
 }
 
 model Guest {
@@ -73,8 +81,9 @@ model Guest {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  rsvp          RSVP?
-  history       RSVPHistory[]
+  rsvp              RSVP?
+  history           RSVPHistory[]
+  giftReservations  GiftReservation[]
 
   @@index([weddingId])
   @@index([token])
@@ -125,15 +134,34 @@ model GiftItem {
 
   title       String
   description String?
-  url         String?
+  paymentUrl  String?
   imageUrl    String?
   price       Decimal? @db.Decimal(10, 2)
   currency    String   @default("CLP")
-  isReserved  Boolean  @default(false)
   sortOrder   Int      @default(0)
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  reservations GiftReservation[]
+
   @@index([weddingId, sortOrder])
+}
+
+model GiftReservation {
+  id          String   @id @default(cuid())
+  giftId      String
+  gift        GiftItem @relation(fields: [giftId], references: [id], onDelete: Cascade)
+  guestId     String
+  guest       Guest    @relation(fields: [guestId], references: [id], onDelete: Cascade)
+
+  message     String?
+  isConfirmed Boolean  @default(false)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([giftId, guestId])
+  @@index([giftId])
+  @@index([guestId])
 }

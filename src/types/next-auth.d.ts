@@ -8,6 +8,7 @@ declare module 'next-auth' {
       email?: string | null
       image?: string | null
       weddingId: string
+      role: 'ADMIN' | 'COUPLE'
     }
   }
 }
@@ -15,5 +16,7 @@ declare module 'next-auth' {
 declare module 'next-auth/jwt' {
   interface JWT {
     weddingId?: string
+    role?: string
+    name?: string | null
   }
 }
