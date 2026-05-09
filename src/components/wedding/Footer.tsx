@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 interface FooterProps {
   partner1Name: string
   partner2Name: string
@@ -17,13 +19,16 @@ export function Footer({ partner1Name, partner2Name, weddingDate }: FooterProps)
       </p>
       <p className="mt-5 text-[0.6rem] tracking-wide text-text-muted/60">
         Hecho con amor por{' '}
-        <a
-          href="https://github.com/elgarra"
-          target="_blank"
-          rel="noopener noreferrer"
+        <a href="https://github.com/elgarra" target="_blank" rel="noopener noreferrer"
           className="text-gold hover:opacity-70 transition-opacity">
           @elgarra
         </a>
+      </p>
+      {/* Subtle panel access — intentionally low contrast */}
+      <p className="mt-8 text-[0.55rem] tracking-[0.3em] text-text-muted/30 hover:text-text-muted/60 transition-colors">
+        <Link href="/couple/login" className="hover:text-gold/60 transition-colors">
+          · acceso ·
+        </Link>
       </p>
     </footer>
   )

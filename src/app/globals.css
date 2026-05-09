@@ -7,8 +7,8 @@
   --color-text-base:  #2C2C2C;
   --color-text-muted: #7a7065;
 
-  --font-serif: var(--font-cormorant);
-  --font-sans:  var(--font-montserrat);
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-sans:  'Montserrat', Arial, sans-serif;
 }
 
 html { scroll-behavior: smooth; }
