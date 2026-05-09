@@ -11,14 +11,17 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
   const { giftId, reservationId } = await params
 
-  // Ensure gift belongs to this wedding
+  const body = await req.json().catch(() => null)
+  if (body === null || typeof body.isConfirmed !== 'boolean')
+    return NextResponse.json({ error: 'Invalid data' }, { status: 400 })
+
+  // Scope both giftId AND reservationId to prevent IDOR
   const gift = await prisma.giftItem.findFirst({ where: { id: giftId, weddingId: session.user.weddingId } })
   if (!gift) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  const { isConfirmed } = await req.json()
   const reservation = await prisma.giftReservation.update({
-    where: { id: reservationId },
-    data: { isConfirmed: Boolean(isConfirmed) },
+    where: { id: reservationId, giftId },
+    data:  { isConfirmed: body.isConfirmed },
   })
   return NextResponse.json({ reservation })
 }

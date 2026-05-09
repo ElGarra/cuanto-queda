@@ -1,33 +1,36 @@
-// In-memory rate limiter — resets on cold start, sufficient for Phase 1
-// Upgrade path: replace store with Vercel KV / Upstash Redis
+// In-memory rate limiter — sufficient for Phase 1 (single instance, dev)
+// Production upgrade: replace store with Upstash Redis / Vercel KV
 
-interface Attempt {
-  count: number
-  resetAt: number
-}
+interface Bucket { count: number; resetAt: number }
 
-const store = new Map<string, Attempt>()
+const store = new Map<string, Bucket>()
 
-const MAX_ATTEMPTS = 5
-const WINDOW_MS = 15 * 60 * 1000 // 15 min
-
-export function checkRateLimit(key: string): { allowed: boolean; retryAfterMs: number } {
+export function checkRateLimit(
+  key: string,
+  { max = 5, windowMs = 15 * 60 * 1000 } = {}
+): { allowed: boolean; retryAfterMs: number } {
   const now = Date.now()
-  const entry = store.get(key)
+  const bucket = store.get(key)
 
-  if (!entry || now > entry.resetAt) {
-    store.set(key, { count: 1, resetAt: now + WINDOW_MS })
+  if (!bucket || now > bucket.resetAt) {
+    store.set(key, { count: 1, resetAt: now + windowMs })
     return { allowed: true, retryAfterMs: 0 }
   }
 
-  if (entry.count >= MAX_ATTEMPTS) {
-    return { allowed: false, retryAfterMs: entry.resetAt - now }
-  }
+  if (bucket.count >= max)
+    return { allowed: false, retryAfterMs: bucket.resetAt - now }
 
-  entry.count++
+  bucket.count++
   return { allowed: true, retryAfterMs: 0 }
 }
 
 export function resetRateLimit(key: string) {
   store.delete(key)
+}
+
+export function getClientIp(req: Request): string {
+  const forwarded = req.headers.get('x-forwarded-for')
+  return forwarded?.split(',')[0].trim()
+    ?? req.headers.get('x-real-ip')
+    ?? 'unknown'
 }

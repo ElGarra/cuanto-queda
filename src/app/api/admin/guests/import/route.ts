@@ -7,10 +7,12 @@ import { GuestImportRowSchema } from '@/schemas/guest'
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!session || session.user.role !== 'ADMIN') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await req.json()
   const rows: unknown[] = Array.isArray(body.rows) ? body.rows : []
+  if (rows.length > 500)
+    return NextResponse.json({ error: 'Máximo 500 filas por importación' }, { status: 400 })
 
   const created: string[] = []
   const errors: { row: number; message: string }[] = []

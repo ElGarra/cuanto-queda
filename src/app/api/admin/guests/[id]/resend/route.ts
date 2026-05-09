@@ -9,7 +9,7 @@ type Params = { params: Promise<{ id: string }> }
 
 export async function POST(_req: NextRequest, { params }: Params) {
   const session = await getServerSession(authOptions)
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!session || session.user.role !== 'ADMIN') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
   const guest = await prisma.guest.findFirst({

@@ -20,11 +20,7 @@ function LoginForm() {
     setLoading(true)
     setError(null)
 
-    const res = await signIn('credentials', {
-      email, password,
-      ip: '', // client-side — real IP handled server-side via headers
-      redirect: false,
-    })
+    const res = await signIn('credentials', { email, password, redirect: false })
 
     if (res?.ok) {
       router.push('/couple/dashboard')

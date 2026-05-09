@@ -22,7 +22,7 @@ export default function LoginPage() {
 
     if (res?.ok) {
       router.push('/admin/dashboard')
-    } else {
+    } else if (res?.ok === false) {
       setError('Credenciales incorrectas')
       setLoading(false)
     }

@@ -5,39 +5,42 @@ import { prisma } from './prisma'
 import { getWedding } from './wedding'
 import { checkRateLimit, resetRateLimit } from './rateLimit'
 
+function getIp(req: Record<string, unknown>): string {
+  const headers = req.headers as Record<string, string | string[] | undefined>
+  const forwarded = headers['x-forwarded-for']
+  const raw = Array.isArray(forwarded) ? forwarded[0] : forwarded
+  return raw?.split(',')[0].trim() ?? (headers['x-real-ip'] as string) ?? 'unknown'
+}
+
 export const authOptions: NextAuthOptions = {
   session: { strategy: 'jwt' },
-  pages: { signIn: '/admin/login' },
+  pages: { signIn: '/couple/login' },
   providers: [
     CredentialsProvider({
       name: 'credentials',
       credentials: {
         email:    { label: 'Email',      type: 'email' },
         password: { label: 'Contraseña', type: 'password' },
-        ip:       { label: 'IP',         type: 'text' },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         if (!credentials?.email || !credentials?.password) return null
 
-        // Rate limit by IP (passed from the login form via hidden field)
-        const ip = credentials.ip ?? 'unknown'
+        // Rate limit by real IP from request headers (not client-supplied)
+        const ip = getIp(req as Record<string, unknown>)
         const rl = checkRateLimit(`login:${ip}`)
-        if (!rl.allowed) {
-          throw new Error(`RATE_LIMITED:${rl.retryAfterMs}`)
-        }
+        if (!rl.allowed) throw new Error(`RATE_LIMITED:${rl.retryAfterMs}`)
 
         const wedding = await getWedding()
         const admin = await prisma.weddingAdmin.findUnique({
           where: { weddingId_email: { weddingId: wedding.id, email: credentials.email } },
         })
 
-        // Always compare to prevent timing attacks even when user not found
-        const hash = admin?.passwordHash ?? '$2b$10$invalidhashfortimingattackprevention'
+        // Always run bcrypt to prevent timing attacks
+        const hash = admin?.passwordHash ?? '$2b$12$invalidhashfortimingattackprevention00000000000000000'
         const valid = await bcrypt.compare(credentials.password, hash)
 
         if (!admin || !valid) return null
 
-        // Reset rate limit on successful login
         resetRateLimit(`login:${ip}`)
 
         return {
