@@ -1,13 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { renderToStaticMarkup } from 'react-dom/server'
-import * as React from 'react'
 import { prisma } from '@/lib/prisma'
-import { resend, FROM, ADMIN_EMAIL } from '@/lib/resend'
+import { getResend, FROM, ADMIN_EMAIL } from '@/lib/resend'
 import { RSVPSubmitSchema } from '@/schemas/rsvp'
 import { getWedding } from '@/lib/wedding'
-import { GuestInvite as _GuestInvite } from '@/emails/GuestInvite'
-import { RSVPConfirmation } from '@/emails/RSVPConfirmation'
-import { AdminNotification } from '@/emails/AdminNotification'
+import { renderRSVPConfirmation } from '@/emails/RSVPConfirmation'
+import { renderAdminNotification } from '@/emails/AdminNotification'
 
 type Params = { params: Promise<{ token: string }> }
 
@@ -121,43 +118,22 @@ export async function POST(req: NextRequest, { params }: Params) {
     : null
 
   if (guest.email) {
-    const html = renderToStaticMarkup(
-      React.createElement(RSVPConfirmation, {
-        guestFirstName: guest.firstName,
-        status,
-        partner1Name: wedding.partner1Name,
-        partner2Name: wedding.partner2Name,
-        weddingDate: weddingDateStr,
-        rsvpUrl,
-      })
-    )
-    await resend.emails.send({
+    await getResend().emails.send({
       from: FROM,
       to: guest.email,
       subject: status === 'CONFIRMED'
         ? `¡Gracias por confirmar! Boda de ${wedding.partner1Name} & ${wedding.partner2Name}`
         : `Recibimos tu respuesta — Boda de ${wedding.partner1Name} & ${wedding.partner2Name}`,
-      html,
+      html: renderRSVPConfirmation({ guestFirstName: guest.firstName, status, partner1Name: wedding.partner1Name, partner2Name: wedding.partner2Name, weddingDate: weddingDateStr, rsvpUrl }),
     }).catch(() => null)
   }
 
   if (ADMIN_EMAIL) {
-    const html = renderToStaticMarkup(
-      React.createElement(AdminNotification, {
-        guestName: `${guest.firstName} ${guest.lastName}`,
-        status,
-        companions: companions as { firstName: string; lastName: string; dietaryRestrictions?: string }[],
-        dietaryRestrictions: dietaryRestrictions ?? null,
-        message: message ?? null,
-        changedAt: new Date().toLocaleString('es-CL', { timeZone: wedding.timezone }),
-        rsvpAdminUrl: adminUrl,
-      })
-    )
-    await resend.emails.send({
+    await getResend().emails.send({
       from: FROM,
       to: ADMIN_EMAIL,
       subject: `RSVP: ${guest.firstName} ${guest.lastName} — ${status === 'CONFIRMED' ? 'Confirmado' : 'No asiste'}`,
-      html,
+      html: renderAdminNotification({ guestName: `${guest.firstName} ${guest.lastName}`, status, companions: companions as { firstName: string; lastName: string; dietaryRestrictions?: string }[], dietaryRestrictions: dietaryRestrictions ?? null, message: message ?? null, changedAt: new Date().toLocaleString('es-CL', { timeZone: wedding.timezone }), rsvpAdminUrl: adminUrl }),
     }).catch(() => null)
   }
 

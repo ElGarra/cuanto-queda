@@ -53,7 +53,8 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     jwt({ token, user }) {
       if (user) {
-        const u = user as { weddingId: string; role: string; name?: string | null }
+        const u = user as { id: string; weddingId: string; role: string; name?: string | null }
+        token.id        = u.id
         token.weddingId = u.weddingId
         token.role      = u.role
         token.name      = u.name
@@ -61,8 +62,9 @@ export const authOptions: NextAuthOptions = {
       return token
     },
     session({ session, token }) {
+      session.user.id        = token.id as string
       session.user.weddingId = token.weddingId as string
-      session.user.role      = token.role as string
+      session.user.role      = token.role as 'ADMIN' | 'COUPLE'
       session.user.name      = token.name as string
       return session
     },

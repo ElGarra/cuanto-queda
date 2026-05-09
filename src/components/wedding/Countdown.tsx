@@ -29,12 +29,12 @@ function getTimeLeft(target: Date): TimeLeft {
 
 export function Countdown({ weddingDate }: CountdownProps) {
   const target = weddingDate ? new Date(weddingDate) : null
-  const [time, setTime] = useState<TimeLeft | null>(
-    target ? getTimeLeft(target) : null
-  )
+  // Start as null — avoids SSR/client hydration mismatch from Date.now()
+  const [time, setTime] = useState<TimeLeft | null>(null)
 
   useEffect(() => {
     if (!target) return
+    setTime(getTimeLeft(target))
     const id = setInterval(() => setTime(getTimeLeft(target)), 1000)
     return () => clearInterval(id)
   }, [weddingDate]) // eslint-disable-line react-hooks/exhaustive-deps

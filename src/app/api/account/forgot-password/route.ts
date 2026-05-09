@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { renderToStaticMarkup } from 'react-dom/server'
-import * as React from 'react'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { generateToken } from '@/lib/tokens'
-import { resend, FROM } from '@/lib/resend'
+import { getResend, FROM } from '@/lib/resend'
 import { getWedding } from '@/lib/wedding'
 import { checkRateLimit } from '@/lib/rateLimit'
-import { PasswordReset } from '@/emails/PasswordReset'
+import { renderPasswordReset } from '@/emails/PasswordReset'
 
 const EXPIRES_MINUTES = 60
 
@@ -46,19 +44,11 @@ export async function POST(req: NextRequest) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
   const resetUrl = `${appUrl}/reset-password/${token}`
 
-  const html = renderToStaticMarkup(
-    React.createElement(PasswordReset, {
-      name: admin.name,
-      resetUrl,
-      expiresInMinutes: EXPIRES_MINUTES,
-    })
-  )
-
-  await resend.emails.send({
+  await getResend().emails.send({
+    html: renderPasswordReset({ name: admin.name, resetUrl, expiresInMinutes: EXPIRES_MINUTES }),
     from: FROM,
     to: admin.email,
     subject: 'Restablecer contraseña',
-    html,
   }).catch(() => null)
 
   return NextResponse.json({ ok: true })

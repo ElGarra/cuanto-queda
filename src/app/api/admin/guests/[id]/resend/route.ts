@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { renderToStaticMarkup } from 'react-dom/server'
-import * as React from 'react'
 import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/lib/auth'
-import { resend, FROM } from '@/lib/resend'
-import { GuestInvite } from '@/emails/GuestInvite'
+import { getResend, FROM } from '@/lib/resend'
+import { renderGuestInvite } from '@/emails/GuestInvite'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -32,22 +30,11 @@ export async function POST(_req: NextRequest, { params }: Params) {
       })
     : null
 
-  const html = renderToStaticMarkup(
-    React.createElement(GuestInvite, {
-      guestFirstName: guest.firstName,
-      partner1Name: wedding.partner1Name,
-      partner2Name: wedding.partner2Name,
-      weddingDate: weddingDateStr,
-      venueName: wedding.venueName,
-      rsvpUrl,
-    })
-  )
-
-  await resend.emails.send({
+  await getResend().emails.send({
     from: FROM,
     to: guest.email,
     subject: `Invitación — Boda de ${wedding.partner1Name} & ${wedding.partner2Name}`,
-    html,
+    html: renderGuestInvite({ guestFirstName: guest.firstName, partner1Name: wedding.partner1Name, partner2Name: wedding.partner2Name, weddingDate: weddingDateStr, venueName: wedding.venueName, rsvpUrl }),
   })
 
   await prisma.guest.update({
