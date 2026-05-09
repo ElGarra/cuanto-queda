@@ -16,11 +16,13 @@ export default async function LandingPage() {
     ? (wedding.scheduleItems as { time: string; label: string }[])
     : []
 
-  const gifts = await prisma.giftItem.findMany({
-    where: { weddingId: wedding.id },
-    include: { reservations: { select: { id: true } } },
-    orderBy: { sortOrder: 'asc' },
-  })
+  const gifts = wedding.giftsEnabled
+    ? await prisma.giftItem.findMany({
+        where: { weddingId: wedding.id },
+        include: { reservations: { select: { id: true } } },
+        orderBy: { sortOrder: 'asc' },
+      })
+    : []
 
   const giftsForPublic = gifts.map((g) => ({
     id:                g.id,
@@ -48,8 +50,8 @@ export default async function LandingPage() {
         scheduleItems={scheduleItems}
         dressCode={wedding.dressCode}
       />
-      <RSVPSection />
-      <GiftSection gifts={giftsForPublic} />
+      {wedding.rsvpEnabled && <RSVPSection />}
+      {wedding.giftsEnabled && <GiftSection gifts={giftsForPublic} />}
       <Footer
         partner1Name={wedding.partner1Name}
         partner2Name={wedding.partner2Name}

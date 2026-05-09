@@ -18,6 +18,7 @@ interface Gift {
 
 interface Props {
   token: string
+  features: { rsvp: boolean; gifts: boolean }
   guest: { maxCompanions: number }
   rsvp: { status: 'CONFIRMED' | 'DECLINED'; companions: { firstName: string; lastName: string; dietaryRestrictions?: string }[]; dietaryRestrictions: string; message: string } | null
   isOpen: boolean
@@ -25,8 +26,8 @@ interface Props {
   gifts: Gift[]
 }
 
-export function GuestTabs({ token, guest, rsvp, isOpen, deadlineStr, gifts }: Props) {
-  const [tab, setTab] = useState<'rsvp' | 'gifts'>('rsvp')
+export function GuestTabs({ token, features, guest, rsvp, isOpen, deadlineStr, gifts }: Props) {
+  const [tab, setTab] = useState<'rsvp' | 'gifts'>(features.rsvp ? 'rsvp' : 'gifts')
   const [giftStates, setGiftStates] = useState<Record<string, { reserved: boolean; message: string; loading: boolean }>>(
     Object.fromEntries(gifts.map((g) => [g.id, { reserved: g.reservedByMe, message: g.myMessage, loading: false }]))
   )
@@ -56,22 +57,22 @@ export function GuestTabs({ token, guest, rsvp, isOpen, deadlineStr, gifts }: Pr
 
   return (
     <>
-      {/* Tab bar */}
-      <div className="flex border-b border-gold/20 bg-white">
-        {[
-          { id: 'rsvp',  label: 'Confirmación' },
-          { id: 'gifts', label: `Regalos${gifts.length ? ` (${gifts.length})` : ''}` },
-        ].map(({ id, label }) => (
-          <button key={id} onClick={() => setTab(id as 'rsvp' | 'gifts')}
-            className={`flex-1 py-3.5 text-xs tracking-[0.2em] uppercase transition-colors ${
-              tab === id
-                ? 'text-gold border-b-2 border-gold'
-                : 'text-text-muted hover:text-gold'
-            }`}>
-            {label}
-          </button>
-        ))}
-      </div>
+      {/* Tab bar — only show tabs for enabled features */}
+      {(features.rsvp && features.gifts) && (
+        <div className="flex border-b border-gold/20 bg-white">
+          {[
+            features.rsvp  && { id: 'rsvp',  label: 'Confirmación' },
+            features.gifts && { id: 'gifts', label: `Regalos${gifts.length ? ` (${gifts.length})` : ''}` },
+          ].filter(Boolean).map(({ id, label }: { id: string; label: string }) => (
+            <button key={id} onClick={() => setTab(id as 'rsvp' | 'gifts')}
+              className={`flex-1 py-3.5 text-xs tracking-[0.2em] uppercase transition-colors ${
+                tab === id ? 'text-gold border-b-2 border-gold' : 'text-text-muted hover:text-gold'
+              }`}>
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="px-4 py-8 max-w-md mx-auto">
         {/* RSVP tab */}

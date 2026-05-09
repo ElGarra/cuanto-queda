@@ -27,6 +27,7 @@ model Wedding {
 
   rsvpDeadline  DateTime?
   rsvpEnabled   Boolean  @default(true)
+  giftsEnabled  Boolean  @default(true)
   locale        String   @default("es")
 
   createdAt     DateTime @default(now())

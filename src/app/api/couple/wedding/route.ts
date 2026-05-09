@@ -5,13 +5,15 @@ import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 
 const schema = z.object({
-  partner1Name: z.string().min(1).max(100),
-  partner2Name: z.string().min(1).max(100),
-  weddingDate:  z.string().datetime().nullable().optional(),
-  venueName:    z.string().max(200).optional(),
-  venueAddress: z.string().max(300).optional(),
-  venueMapsUrl: z.string().url().optional().or(z.literal('')),
-  dressCode:    z.string().max(200).optional(),
+  partner1Name:  z.string().min(1).max(100),
+  partner2Name:  z.string().min(1).max(100),
+  weddingDate:   z.string().datetime().nullable().optional(),
+  venueName:     z.string().max(200).optional(),
+  venueAddress:  z.string().max(300).optional(),
+  venueMapsUrl:  z.string().url().optional().or(z.literal('')),
+  dressCode:     z.string().max(200).optional(),
+  rsvpEnabled:   z.boolean().optional(),
+  giftsEnabled:  z.boolean().optional(),
 })
 
 export async function PATCH(req: NextRequest) {

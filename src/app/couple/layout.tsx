@@ -1,23 +1,32 @@
 import { getServerSession } from 'next-auth'
 import Link from 'next/link'
 import { authOptions } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
 import { SessionProvider } from '@/app/admin/SessionProvider'
 
-const nav = [
-  { href: '/couple/dashboard', label: 'Inicio' },
-  { href: '/couple/wedding',   label: 'Nuestra boda' },
-  { href: '/couple/guests',    label: 'Invitados' },
-  { href: '/couple/gifts',     label: 'Regalos' },
-  { href: '/couple/account',   label: 'Mi cuenta' },
+const BASE_NAV = [
+  { href: '/couple/dashboard', label: 'Inicio',        feature: null },
+  { href: '/couple/wedding',   label: 'Nuestra boda',  feature: null },
+  { href: '/couple/guests',    label: 'Invitados',      feature: null },
+  { href: '/couple/gifts',     label: 'Regalos',        feature: 'gifts' },
+  { href: '/couple/account',   label: 'Mi cuenta',      feature: null },
 ]
 
 export default async function CoupleLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions)
 
-  // No session → render children as-is (login page handles its own UI)
-  if (!session) {
-    return <SessionProvider>{children}</SessionProvider>
-  }
+  if (!session) return <SessionProvider>{children}</SessionProvider>
+
+  const wedding = await prisma.wedding.findUnique({
+    where: { id: session.user.weddingId },
+    select: { giftsEnabled: true, rsvpEnabled: true },
+  })
+
+  const features = { gifts: wedding?.giftsEnabled ?? true, rsvp: wedding?.rsvpEnabled ?? true }
+
+  const nav = BASE_NAV.filter(({ feature }) =>
+    !feature || features[feature as keyof typeof features]
+  )
 
   return (
     <SessionProvider>

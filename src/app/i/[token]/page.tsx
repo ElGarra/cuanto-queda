@@ -23,13 +23,13 @@ export default async function RSVPPage({ params }: Props) {
   const isDeadlinePassed = deadline ? new Date() > deadline : false
   const isOpen = wedding.rsvpEnabled && !isDeadlinePassed
 
-  const gifts = await prisma.giftItem.findMany({
-    where: { weddingId: wedding.id },
-    include: {
-      reservations: { select: { guestId: true } },
-    },
-    orderBy: { sortOrder: 'asc' },
-  })
+  const gifts = wedding.giftsEnabled
+    ? await prisma.giftItem.findMany({
+        where: { weddingId: wedding.id },
+        include: { reservations: { select: { guestId: true } } },
+        orderBy: { sortOrder: 'asc' },
+      })
+    : []
 
   const weddingDateStr = wedding.weddingDate
     ? wedding.weddingDate.toLocaleDateString('es-CL', {
@@ -67,6 +67,7 @@ export default async function RSVPPage({ params }: Props) {
       {/* Tabs */}
       <GuestTabs
         token={token}
+        features={{ rsvp: wedding.rsvpEnabled, gifts: wedding.giftsEnabled }}
         guest={{
           maxCompanions: guest.maxCompanions,
         }}
