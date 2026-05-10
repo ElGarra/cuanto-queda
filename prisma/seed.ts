@@ -1,7 +1,9 @@
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
+import { customAlphabet } from 'nanoid'
 
 const prisma = new PrismaClient()
+const nanoId = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 6)
 
 async function main() {
   const email    = process.env.ADMIN_EMAIL
@@ -12,7 +14,7 @@ async function main() {
     throw new Error('Required: ADMIN_EMAIL and ADMIN_SEED_PASSWORD')
 
   const wedding = await prisma.wedding.create({
-    data: { slug: 'default', partner1Name: 'Novio', partner2Name: 'Novia' },
+    data: { slug: `admin-${nanoId()}`, partner1Name: 'Novio', partner2Name: 'Novia' },
   })
 
   const hash = await bcrypt.hash(password, 12)
