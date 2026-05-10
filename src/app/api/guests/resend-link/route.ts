@@ -3,9 +3,13 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { getResend, FROM } from '@/lib/resend'
 import { getAppUrl } from '@/lib/appUrl'
-import { getWedding } from '@/lib/wedding'
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
 import { renderGuestInvite } from '@/emails/GuestInvite'
+
+const Schema = z.object({
+  email:     z.string().email(),
+  weddingId: z.string().min(1),
+})
 
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req)
@@ -13,22 +17,26 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true })
 
   const body = await req.json().catch(() => null)
-  const parsed = body ? z.object({ email: z.string().email() }).safeParse(body) : { success: false as const }
+  const parsed = body ? Schema.safeParse(body) : { success: false as const }
   if (!parsed.success) return NextResponse.json({ ok: true })
 
-  const wedding = await getWedding()
   const guest = await prisma.guest.findFirst({
-    where: { weddingId: wedding.id, email: { equals: parsed.data.email, mode: 'insensitive' } },
+    where: {
+      weddingId: parsed.data.weddingId,
+      email: { equals: parsed.data.email, mode: 'insensitive' },
+    },
+    include: { wedding: true },
   })
 
   if (!guest?.email) return NextResponse.json({ ok: true })
 
-  const rsvpUrl = `${getAppUrl()}/i/${guest.token}`
+  const { wedding } = guest
+  const rsvpUrl      = `${getAppUrl()}/i/${guest.token}`
   const weddingDateStr = wedding.weddingDate
     ? wedding.weddingDate.toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric', timeZone: wedding.timezone })
     : null
 
-  await getResend().emails.send({
+  await getResend()?.emails.send({
     from: FROM, to: guest.email,
     subject: `Tu link de invitación — ${wedding.partner1Name} & ${wedding.partner2Name}`,
     html: renderGuestInvite({ guestFirstName: guest.firstName, partner1Name: wedding.partner1Name, partner2Name: wedding.partner2Name, weddingDate: weddingDateStr, venueName: wedding.venueName, rsvpUrl }),

@@ -9,17 +9,13 @@ export default async function AdminDashboard() {
   const session = await getServerSession(authOptions)
   if (!session || session.user.role !== 'ADMIN') redirect('/couple/login')
 
-  const weddingId = session.user.weddingId
-
-  const [wedding, confirmed, declined, pending, total] = await Promise.all([
-    prisma.wedding.findUnique({ where: { id: weddingId } }),
-    prisma.rSVP.count({ where: { guest: { weddingId }, status: 'CONFIRMED' } }),
-    prisma.rSVP.count({ where: { guest: { weddingId }, status: 'DECLINED' } }),
-    prisma.guest.count({ where: { weddingId, OR: [{ rsvp: null }, { rsvp: { status: 'PENDING' } }] } }),
-    prisma.guest.count({ where: { weddingId } }),
-  ])
-
-  if (!wedding) redirect('/admin/login')
+  const weddings = await prisma.wedding.findMany({
+    orderBy: { createdAt: 'desc' },
+    include: {
+      _count: { select: { guests: true } },
+      admins: { select: { name: true, role: true } },
+    },
+  })
 
   return (
     <main className="min-h-svh bg-cream px-4 py-12">
@@ -29,68 +25,106 @@ export default async function AdminDashboard() {
         <div className="flex items-end justify-between">
           <div>
             <p className="text-[0.7rem] tracking-[0.3em] uppercase text-gold mb-1">Panel de administración</p>
-            <h1 className="font-serif italic text-3xl text-text-base">
-              {wedding.partner1Name} &amp; {wedding.partner2Name}
-            </h1>
-            {wedding.weddingDate && (
-              <p className="text-text-muted text-sm mt-1">
-                {wedding.weddingDate.toLocaleDateString('es-CL', {
-                  day: 'numeric', month: 'long', year: 'numeric', timeZone: wedding.timezone,
-                })} · {wedding.venueName ?? 'Venue por confirmar'}
-              </p>
-            )}
+            <h1 className="font-serif italic text-3xl text-text-base">Bodas</h1>
           </div>
-          <Link href="/couple/dashboard"
+          <Link href="/admin/weddings/new"
             className="bg-gold text-white px-5 py-2.5 text-sm tracking-wide hover:opacity-90 transition-opacity whitespace-nowrap">
-            Entrar como novios →
+            + Nueva boda
           </Link>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[
-            { label: 'Total invitados', value: total,     color: 'text-text-base' },
-            { label: 'Confirmados',     value: confirmed, color: 'text-green-600' },
-            { label: 'No asisten',      value: declined,  color: 'text-red-500' },
-            { label: 'Sin respuesta',   value: pending,   color: 'text-gold' },
-          ].map(({ label, value, color }) => (
-            <div key={label} className="bg-white p-5 text-center shadow-sm">
-              <p className={`text-4xl font-serif font-light ${color}`}>{value}</p>
-              <p className="text-[0.6rem] tracking-[0.2em] uppercase text-text-muted mt-1">{label}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Feature toggles */}
-        <div className="bg-white shadow-sm p-6">
-          <p className="text-[0.65rem] tracking-[0.2em] uppercase text-text-muted mb-4">
-            Funcionalidades de la boda
-          </p>
-          <FeatureToggles
-            weddingId={weddingId}
-            rsvpEnabled={wedding.rsvpEnabled}
-            giftsEnabled={wedding.giftsEnabled}
-          />
-        </div>
-
-        {/* Quick links */}
-        <div className="bg-white shadow-sm p-6">
-          <p className="text-[0.65rem] tracking-[0.2em] uppercase text-text-muted mb-4">Accesos rápidos</p>
-          <div className="flex flex-wrap gap-3">
-            {[
-              { href: '/couple/guests',   label: 'Invitados' },
-              { href: '/couple/gifts',    label: 'Regalos' },
-              { href: '/couple/wedding',  label: 'Info de la boda' },
-              { href: '/admin/users',     label: 'Usuarios' },
-              { href: '/',                label: 'Ver landing' },
-            ].map(({ href, label }) => (
-              <Link key={href} href={href}
-                className="text-sm border border-gold/30 text-text-muted px-4 py-2 hover:border-gold hover:text-gold transition-colors">
-                {label}
-              </Link>
-            ))}
+        {/* Lista de bodas */}
+        {weddings.length === 0 ? (
+          <div className="bg-white shadow-sm p-12 text-center">
+            <p className="text-text-muted text-sm">No hay bodas todavía.</p>
+            <Link href="/admin/weddings/new"
+              className="inline-block mt-4 text-gold text-sm hover:opacity-70 transition-opacity">
+              Crear la primera →
+            </Link>
           </div>
-        </div>
+        ) : (
+          <div className="space-y-4">
+            {weddings.map((w) => {
+              const dateStr = w.weddingDate
+                ? w.weddingDate.toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric', timeZone: w.timezone })
+                : null
+              const coupleMembers = w.admins.filter(a => a.role === 'COUPLE').map(a => a.name).filter(Boolean)
+
+              return (
+                <div key={w.id} className="bg-white shadow-sm p-6">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="space-y-1">
+                      <h2 className="font-serif italic text-xl text-text-base">
+                        {w.partner1Name} &amp; {w.partner2Name}
+                      </h2>
+                      <p className="text-text-muted text-xs">
+                        {dateStr ?? 'Fecha por confirmar'}
+                        {w.venueName && ` · ${w.venueName}`}
+                      </p>
+                      <p className="text-text-muted text-xs">
+                        /{w.slug}
+                      </p>
+                    </div>
+                    <div className="flex gap-2 shrink-0 flex-wrap justify-end">
+                      <Link href={`/${w.slug}`} target="_blank"
+                        className="text-xs border border-gold/30 text-text-muted px-3 py-1.5 hover:border-gold hover:text-gold transition-colors">
+                        Ver landing ↗
+                      </Link>
+                      <Link href={`/admin/weddings/${w.id}`}
+                        className="text-xs border border-gold/30 text-text-muted px-3 py-1.5 hover:border-gold hover:text-gold transition-colors">
+                        Gestionar
+                      </Link>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex gap-6 text-xs text-text-muted">
+                    <span>{w._count.guests} invitados</span>
+                    <span className={w.rsvpEnabled ? 'text-green-600' : ''}>
+                      RSVP {w.rsvpEnabled ? 'activo' : 'inactivo'}
+                    </span>
+                    <span className={w.giftsEnabled ? 'text-green-600' : ''}>
+                      Regalos {w.giftsEnabled ? 'activo' : 'inactivo'}
+                    </span>
+                    {coupleMembers.length > 0 && (
+                      <span>{coupleMembers.join(', ')}</span>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* Panel rápido de la propia boda del admin */}
+        {session.user.weddingId && (() => {
+          const own = weddings.find(w => w.id === session.user.weddingId)
+          if (!own) return null
+          return (
+            <div className="bg-white shadow-sm p-6 space-y-4">
+              <p className="text-[0.65rem] tracking-[0.2em] uppercase text-text-muted">
+                Acceso rápido — {own.partner1Name} &amp; {own.partner2Name}
+              </p>
+              <FeatureToggles
+                weddingId={own.id}
+                rsvpEnabled={own.rsvpEnabled}
+                giftsEnabled={own.giftsEnabled}
+              />
+              <div className="flex flex-wrap gap-3 pt-2">
+                {[
+                  { href: '/couple/dashboard', label: 'Entrar como novios →' },
+                  { href: '/couple/guests',    label: 'Invitados' },
+                  { href: '/couple/gifts',     label: 'Regalos' },
+                  { href: '/admin/users',      label: 'Usuarios' },
+                ].map(({ href, label }) => (
+                  <Link key={href} href={href}
+                    className="text-sm border border-gold/30 text-text-muted px-4 py-2 hover:border-gold hover:text-gold transition-colors">
+                    {label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )
+        })()}
 
       </div>
     </main>

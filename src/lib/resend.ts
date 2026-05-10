@@ -3,10 +3,10 @@ import { Resend } from 'resend'
 // Lazily initialized so the build doesn't fail when env vars are absent
 let _resend: Resend | null = null
 
-export function getResend(): Resend {
+export function getResend(): Resend | null {
   if (!_resend) {
     const key = process.env.RESEND_API_KEY
-    if (!key) throw new Error('RESEND_API_KEY is not set')
+    if (!key) return null
     _resend = new Resend(key)
   }
   return _resend

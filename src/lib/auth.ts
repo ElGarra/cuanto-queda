@@ -2,7 +2,6 @@ import type { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import bcrypt from 'bcryptjs'
 import { prisma } from './prisma'
-import { getWedding } from './wedding'
 import { checkRateLimit, resetRateLimit } from './rateLimit'
 
 function getIp(req: Record<string, unknown>): string {
@@ -30,9 +29,8 @@ export const authOptions: NextAuthOptions = {
         const rl = checkRateLimit(`login:${ip}`)
         if (!rl.allowed) throw new Error(`RATE_LIMITED:${rl.retryAfterMs}`)
 
-        const wedding = await getWedding()
-        const admin = await prisma.weddingAdmin.findUnique({
-          where: { weddingId_email: { weddingId: wedding.id, email: credentials.email } },
+        const admin = await prisma.weddingAdmin.findFirst({
+          where: { email: credentials.email },
         })
 
         // Always run bcrypt to prevent timing attacks
@@ -47,7 +45,7 @@ export const authOptions: NextAuthOptions = {
           id:        admin.id,
           email:     admin.email,
           name:      admin.name,
-          weddingId: wedding.id,
+          weddingId: admin.weddingId,
           role:      admin.role,
         }
       },

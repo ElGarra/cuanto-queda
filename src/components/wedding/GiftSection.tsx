@@ -28,10 +28,10 @@ export function GiftSection({ gifts }: Props) {
       </p>
       <h2 className="font-serif font-light italic text-text-base mb-4"
         style={{ fontSize: 'clamp(1.8rem, 5vw, 2.8rem)' }}>
-        Para los que quieran sumarse
+        Para los que quieran participar
       </h2>
       <p className="text-text-muted text-sm max-w-md mx-auto mb-12 leading-relaxed">
-        Si querés hacernos un regalo, acá encontrás algunas ideas. Para reservar uno, usá tu link personal de invitado.
+        Si quieres hacernos un regalo, aquí encontrarás algunas ideas. Para reservar uno, usa tu link personal de invitado.
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-4xl mx-auto">
@@ -63,9 +63,9 @@ export function GiftSection({ gifts }: Props) {
                   </button>
                   {tooltip === gift.id && (
                     <div className="absolute bottom-full right-0 mb-2 w-56 bg-text-base text-white text-xs p-3 leading-relaxed z-10">
-                      Para reservar usá tu link personal de invitado.
+                      Para reservar usa tu link personal de invitado.
                       <br />
-                      <span className="text-gold">¿No lo tenés? Ingresá tu email en la sección de arriba.</span>
+                      <span className="text-gold">¿No lo tienes? Ingresa tu email en la sección de arriba.</span>
                       <div className="absolute bottom-0 right-4 translate-y-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-text-base" />
                     </div>
                   )}

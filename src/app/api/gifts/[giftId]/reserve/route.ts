@@ -8,13 +8,17 @@ const PostSchema   = z.object({ token: z.string().min(1), message: z.string().ma
 const DeleteSchema = z.object({ token: z.string().min(1) })
 
 async function resolveGuestAndGift(token: string, giftId: string) {
-  const [guest, gift] = await Promise.all([
-    prisma.guest.findUnique({ where: { token }, include: { wedding: { select: { giftsEnabled: true } } } }),
-    prisma.giftItem.findUnique({ where: { id: giftId } }),
-  ])
-  if (!guest || !gift || gift.weddingId !== guest.weddingId) return null
-  if (!guest.wedding.giftsEnabled) return null
-  return { guest, gift }
+  try {
+    const [guest, gift] = await Promise.all([
+      prisma.guest.findUnique({ where: { token }, include: { wedding: { select: { giftsEnabled: true } } } }),
+      prisma.giftItem.findUnique({ where: { id: giftId } }),
+    ])
+    if (!guest || !gift || gift.weddingId !== guest.weddingId) return null
+    if (!guest.wedding.giftsEnabled) return null
+    return { guest, gift }
+  } catch {
+    return null
+  }
 }
 
 export async function POST(req: NextRequest, { params }: Params) {

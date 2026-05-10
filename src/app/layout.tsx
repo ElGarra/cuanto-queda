@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Florencia & Matias',
-  description: 'Nos casamos — 27 de marzo, 2027',
+  title: 'noviosya',
+  description: 'La web de tu boda, lista en minutos',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

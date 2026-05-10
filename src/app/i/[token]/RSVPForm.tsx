@@ -78,8 +78,8 @@ export function RSVPForm({ token, maxCompanions, initialRsvp }: Props) {
         </p>
         <p className="text-text-muted text-sm">
           {status === 'CONFIRMED'
-            ? 'Tu asistencia está confirmada. Si necesitás cambiar algo, volvé a este link.'
-            : 'Recibimos tu respuesta. Podés cambiarla cuando quieras.'}
+            ? 'Tu asistencia está confirmada. Si necesitas cambiar algo, vuelve a este link.'
+            : 'Recibimos tu respuesta. Puedes cambiarla cuando quieras.'}
         </p>
         <button onClick={() => setSuccess(false)} className="mt-6 text-gold text-xs underline">
           Modificar respuesta

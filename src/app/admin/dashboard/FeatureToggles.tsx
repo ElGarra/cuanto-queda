@@ -21,14 +21,14 @@ const FEATURES = [
   },
 ]
 
-export function FeatureToggles({ weddingId: _weddingId, rsvpEnabled, giftsEnabled }: Props) {
+export function FeatureToggles({ weddingId, rsvpEnabled, giftsEnabled }: Props) {
   const [features, setFeatures] = useState({ rsvpEnabled, giftsEnabled })
   const [saving, setSaving] = useState<string | null>(null)
 
   async function toggle(key: 'rsvpEnabled' | 'giftsEnabled') {
     setSaving(key)
     const newVal = !features[key]
-    const res = await fetch('/api/couple/wedding', {
+    const res = await fetch(`/api/admin/weddings/${weddingId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ [key]: newVal }),

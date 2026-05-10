@@ -31,8 +31,8 @@ export async function PATCH(req: NextRequest) {
     where: { id: session.user.weddingId },
     data: {
       ...rest,
-      weddingDate: weddingDate ? new Date(weddingDate) : null,
-      venueMapsUrl: venueMapsUrl || null,
+      ...(weddingDate !== undefined && { weddingDate: weddingDate ? new Date(weddingDate) : null }),
+      ...(venueMapsUrl !== undefined && { venueMapsUrl: venueMapsUrl || null }),
     },
   })
 

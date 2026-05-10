@@ -143,7 +143,7 @@ export function GuestTabs({ token, features, guest, rsvp, isOpen, deadlineStr, g
                     {state.reserved ? (
                       <>
                         <span className="text-xs text-gold bg-amber-50 border border-gold/20 px-3 py-1.5 rounded-full">
-                          ✓ Reservado por vos
+                          ✓ Reservado por ti
                         </span>
                         {gift.paymentUrl && (
                           <a href={gift.paymentUrl} target="_blank" rel="noopener noreferrer"

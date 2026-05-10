@@ -30,7 +30,7 @@ export async function POST(_req: NextRequest, { params }: Params) {
       })
     : null
 
-  await getResend().emails.send({
+  await getResend()?.emails.send({
     from: FROM,
     to: guest.email,
     subject: `Invitación — Boda de ${wedding.partner1Name} & ${wedding.partner2Name}`,

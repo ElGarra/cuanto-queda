@@ -98,7 +98,7 @@ export async function POST(req: NextRequest, { params }: Params) {
     : null
 
   if (guest.email) {
-    await getResend().emails.send({
+    await getResend()?.emails.send({
       from: FROM, to: guest.email,
       subject: status === 'CONFIRMED'
         ? `¡Gracias por confirmar! — ${wedding.partner1Name} & ${wedding.partner2Name}`
@@ -108,7 +108,7 @@ export async function POST(req: NextRequest, { params }: Params) {
   }
 
   if (ADMIN_EMAIL) {
-    await getResend().emails.send({
+    await getResend()?.emails.send({
       from: FROM, to: ADMIN_EMAIL,
       subject: `RSVP: ${guest.firstName} ${guest.lastName} — ${status === 'CONFIRMED' ? 'Confirmado' : 'No asiste'}`,
       html: renderAdminNotification({ guestName: `${guest.firstName} ${guest.lastName}`, status, companions: companions as { firstName: string; lastName: string; dietaryRestrictions?: string }[], dietaryRestrictions: dietaryRestrictions ?? null, message: message ?? null, changedAt: new Date().toLocaleString('es-CL', { timeZone: wedding.timezone }), rsvpAdminUrl: adminUrl }),

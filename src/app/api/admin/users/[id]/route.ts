@@ -14,7 +14,7 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
 
   // Prevent self-deletion
   if (id === session.user.id)
-    return NextResponse.json({ error: 'No podés eliminarte a vos mismo' }, { status: 400 })
+    return NextResponse.json({ error: 'No puedes eliminarte a ti mismo' }, { status: 400 })
 
   await prisma.weddingAdmin.deleteMany({
     where: { id, weddingId: session.user.weddingId },
