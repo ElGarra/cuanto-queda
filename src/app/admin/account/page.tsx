@@ -1,5 +1,6 @@
 import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { authOptions } from '@/lib/auth'
 import AccountForm from './AccountForm'
 
@@ -9,9 +10,14 @@ export default async function AdminAccountPage() {
 
   return (
     <main className="min-h-svh bg-cream px-4 py-12">
-      <div className="max-w-xl mx-auto">
-        <p className="text-[0.7rem] tracking-[0.3em] uppercase text-gold mb-1">Administración</p>
-        <h1 className="font-serif italic text-3xl text-text-base mb-8">Mi cuenta</h1>
+      <div className="max-w-xl mx-auto space-y-6">
+        <div>
+          <Link href="/admin/dashboard"
+            className="text-[0.65rem] tracking-[0.2em] uppercase text-text-muted hover:text-gold transition-colors">
+            ← Volver al panel
+          </Link>
+          <h1 className="font-serif italic text-3xl text-text-base mt-2">Mi cuenta</h1>
+        </div>
         <AccountForm name={session.user.name ?? ''} email={session.user.email ?? ''} />
       </div>
     </main>

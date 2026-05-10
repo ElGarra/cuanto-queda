@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { FeatureToggles } from '@/app/admin/dashboard/FeatureToggles'
+import { SwitchWeddingButton } from '@/app/admin/dashboard/SwitchWeddingButton'
 
 type Props = { params: Promise<{ id: string }> }
 
@@ -32,7 +33,7 @@ export default async function ManageWeddingPage({ params }: Props) {
       <div className="max-w-3xl mx-auto space-y-6">
 
         {/* Header */}
-        <div className="flex items-end justify-between">
+        <div className="flex items-start justify-between gap-4">
           <div>
             <Link href="/admin/dashboard"
               className="text-[0.65rem] tracking-[0.2em] uppercase text-text-muted hover:text-gold transition-colors">
@@ -46,18 +47,21 @@ export default async function ManageWeddingPage({ params }: Props) {
               {wedding.venueName && ` · ${wedding.venueName}`}
             </p>
           </div>
-          <Link href={`/${wedding.slug}`} target="_blank"
-            className="text-sm border border-gold/30 text-text-muted px-4 py-2 hover:border-gold hover:text-gold transition-colors whitespace-nowrap">
-            Ver landing ↗
-          </Link>
+          <div className="flex gap-2 shrink-0 mt-6">
+            <Link href={`/${wedding.slug}`} target="_blank"
+              className="text-sm border border-gold/30 text-text-muted px-4 py-2 hover:border-gold hover:text-gold transition-colors whitespace-nowrap">
+              Ver landing ↗
+            </Link>
+            <SwitchWeddingButton weddingId={wedding.id} />
+          </div>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           {[
-            { label: 'Invitados',  value: wedding._count.guests },
-            { label: 'Regalos',    value: wedding._count.gifts },
-            { label: 'Slug',       value: `/${wedding.slug}`, small: true },
+            { label: 'Invitados', value: wedding._count.guests },
+            { label: 'Regalos',   value: wedding._count.gifts },
+            { label: 'Slug',      value: `/${wedding.slug}`, small: true },
           ].map(({ label, value, small }) => (
             <div key={label} className="bg-white p-4 text-center shadow-sm">
               <p className={`font-serif font-light text-text-base ${small ? 'text-sm mt-1' : 'text-3xl'}`}>{value}</p>
@@ -76,39 +80,21 @@ export default async function ManageWeddingPage({ params }: Props) {
           />
         </div>
 
-        {/* Usuarios novios */}
+        {/* Cuentas novios */}
         <div className="bg-white shadow-sm p-6">
           <p className="text-[0.65rem] tracking-[0.2em] uppercase text-text-muted mb-4">Cuentas de los novios</p>
           {coupleAdmins.length === 0 ? (
             <p className="text-text-muted text-sm">Sin cuentas asociadas.</p>
           ) : (
-            <ul className="space-y-2">
+            <ul className="divide-y divide-gold/10">
               {coupleAdmins.map(a => (
-                <li key={a.id} className="flex items-center justify-between text-sm">
-                  <span className="text-text-base">{a.name ?? '—'}</span>
+                <li key={a.id} className="flex items-center justify-between py-3 text-sm">
+                  <span className="text-text-base font-medium">{a.name ?? '—'}</span>
                   <span className="text-text-muted">{a.email}</span>
                 </li>
               ))}
             </ul>
           )}
-        </div>
-
-        {/* Accesos rápidos */}
-        <div className="bg-white shadow-sm p-6">
-          <p className="text-[0.65rem] tracking-[0.2em] uppercase text-text-muted mb-4">Accesos rápidos</p>
-          <div className="flex flex-wrap gap-3">
-            {[
-              { href: '/couple/guests',  label: 'Invitados' },
-              { href: '/couple/gifts',   label: 'Regalos' },
-              { href: '/couple/wedding', label: 'Info de la boda' },
-              { href: '/admin/users',    label: 'Usuarios' },
-            ].map(({ href, label }) => (
-              <Link key={href} href={href}
-                className="text-sm border border-gold/30 text-text-muted px-4 py-2 hover:border-gold hover:text-gold transition-colors">
-                {label}
-              </Link>
-            ))}
-          </div>
         </div>
 
       </div>

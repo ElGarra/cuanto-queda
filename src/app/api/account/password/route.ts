@@ -20,8 +20,8 @@ export async function POST(req: NextRequest) {
   if (!parsed.success)
     return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 })
 
-  const admin = await prisma.weddingAdmin.findFirst({
-    where: { email: session.user.email!, weddingId: session.user.weddingId },
+  const admin = await prisma.weddingAdmin.findUnique({
+    where: { email: session.user.email! },
   })
   if (!admin) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
