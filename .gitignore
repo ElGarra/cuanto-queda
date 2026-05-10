@@ -1,6 +1,7 @@
 # env
 .env.local
 .env*.local
+tests/.env.test
 
 # Next.js
 .next/

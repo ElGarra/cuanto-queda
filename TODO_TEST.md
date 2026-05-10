@@ -3,10 +3,7 @@
 > **Estado:** Tests automáticos corridos 2026-05-10 — 94 ✓ PASS, 0 ✗ FAIL, 30 👁 requieren revisión manual
 > Correr tests: `bash tests/run-all.sh`
 
-Credenciales:
-- Admin: joaquin.castanos@gmail.com / Admin123!
-- Florencia (COUPLE): florencia@test.com / Novios123!
-- Matias (COUPLE): matias@test.com / Novios123!
+Credenciales: ver `tests/.env.test` (no commiteado)
 
 Links invitados:
 - Valentina Morales +1 → /i/effbyixCGcyg34t2Hn6xP

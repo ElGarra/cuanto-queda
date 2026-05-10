@@ -1,14 +1,18 @@
 #!/usr/bin/env bash
-# Automated functional test suite — cuanto-queda
+# Automated functional test suite — noviosya
 # Usage: bash tests/run-all.sh
 # Requires: curl, python3, app running on localhost:3000
+# Credentials via env vars (see tests/README.md) or .env.test
 
 BASE="http://localhost:3000"
 
-ADMIN_EMAIL="joaquin.castanos@gmail.com"
-ADMIN_PASS="Admin123!"
-COUPLE_EMAIL="florencia@test.com"
-COUPLE_PASS="Novios123!"
+# Load from env or .env.test if present
+[ -f "$(dirname "$0")/.env.test" ] && source "$(dirname "$0")/.env.test"
+
+ADMIN_EMAIL="${TEST_ADMIN_EMAIL:?set TEST_ADMIN_EMAIL}"
+ADMIN_PASS="${TEST_ADMIN_PASS:?set TEST_ADMIN_PASS}"
+COUPLE_EMAIL="${TEST_COUPLE_EMAIL:?set TEST_COUPLE_EMAIL}"
+COUPLE_PASS="${TEST_COUPLE_PASS:?set TEST_COUPLE_PASS}"
 
 TOKEN_VALENTINA="effbyixCGcyg34t2Hn6xP"  # +1
 TOKEN_SEBASTIAN="UtSGMaNgHAF039kR3J7DR"   # +1
