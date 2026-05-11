@@ -5,6 +5,14 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { getEffectiveWeddingId } from '@/lib/weddingContext'
 
+function LockIcon() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" className="inline-block ml-1 opacity-50" aria-hidden="true">
+      <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+    </svg>
+  )
+}
+
 export default async function CoupleDashboard() {
   const session = await getServerSession(authOptions)
   if (!session) redirect('/login')
@@ -22,6 +30,9 @@ export default async function CoupleDashboard() {
       prisma.giftItem.count({ where: { weddingId } }),
       prisma.giftReservation.count({ where: { gift: { weddingId } } }),
     ])
+
+  const rsvpEnabled  = wedding?.rsvpEnabled  ?? true
+  const giftsEnabled = wedding?.giftsEnabled ?? true
 
   const daysLeft = wedding?.weddingDate
     ? Math.max(0, Math.ceil((wedding.weddingDate.getTime() - Date.now()) / 86400000))
@@ -43,24 +54,54 @@ export default async function CoupleDashboard() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+        <Link href="/couple/guests"
+          className="bg-white p-6 text-center shadow-sm hover:shadow-md transition-shadow">
+          <p className="text-4xl font-serif font-light text-text-base mb-1">{totalGuests}</p>
+          <p className="text-[0.65rem] tracking-[0.2em] uppercase text-text-muted">Invitados</p>
+        </Link>
+
         {[
-          { label: 'Invitados', value: totalGuests, color: 'text-text-base', href: '/couple/guests' },
-          { label: 'Confirmados', value: confirmed, color: 'text-green-600', href: '/couple/rsvps' },
-          { label: 'No asisten', value: declined, color: 'text-red-500', href: '/couple/rsvps' },
-          { label: 'Sin respuesta', value: pending, color: 'text-gold', href: '/couple/rsvps' },
-        ].map(({ label, value, color, href }) => (
-          <Link key={label} href={href}
-            className="bg-white p-6 text-center shadow-sm hover:shadow-md transition-shadow">
-            <p className={`text-4xl font-serif font-light ${color} mb-1`}>{value}</p>
-            <p className="text-[0.65rem] tracking-[0.2em] uppercase text-text-muted">{label}</p>
+          { label: 'Confirmados',  value: confirmed, color: 'text-green-600' },
+          { label: 'No asisten',   value: declined,  color: 'text-red-500' },
+          { label: 'Sin respuesta', value: pending,  color: 'text-gold' },
+        ].map(({ label, value, color }) => (
+          <Link key={label} href="/couple/guests"
+            className={`bg-white p-6 text-center shadow-sm transition-shadow relative ${
+              rsvpEnabled ? 'hover:shadow-md' : 'opacity-60'
+            }`}>
+            <p className={`text-4xl font-serif font-light mb-1 ${rsvpEnabled ? color : 'text-text-muted'}`}>
+              {value}
+            </p>
+            <p className="text-[0.65rem] tracking-[0.2em] uppercase text-text-muted">
+              {label}
+              {!rsvpEnabled && <LockIcon />}
+            </p>
           </Link>
         ))}
       </div>
 
+      {!rsvpEnabled && (
+        <p className="text-xs text-text-muted/60 -mt-5 mb-6 text-right">
+          RSVP desactivado —{' '}
+          <Link href="/couple/wedding" className="hover:text-gold transition-colors underline">
+            activar
+          </Link>
+        </p>
+      )}
+
       {/* Quick links */}
       <div className="grid sm:grid-cols-2 gap-4">
-        <div className="bg-white p-6 shadow-sm">
-          <h2 className="font-serif italic text-lg text-text-base mb-4">Lista de regalos</h2>
+        <div className={`bg-white p-6 shadow-sm ${!giftsEnabled ? 'opacity-70' : ''}`}>
+          <h2 className="font-serif italic text-lg text-text-base mb-1 flex items-center gap-1.5">
+            Lista de regalos
+            {!giftsEnabled && <LockIcon />}
+          </h2>
+          {!giftsEnabled && (
+            <p className="text-[0.65rem] tracking-[0.1em] uppercase text-gold/70 mb-3">
+              Desactivado en landing ·{' '}
+              <Link href="/couple/wedding" className="underline hover:text-gold">activar</Link>
+            </p>
+          )}
           <p className="text-text-muted text-sm mb-4">
             {totalGifts} regalos · {reservedGifts} reservados
           </p>
@@ -69,6 +110,7 @@ export default async function CoupleDashboard() {
             Gestionar regalos
           </Link>
         </div>
+
         <div className="bg-white p-6 shadow-sm">
           <h2 className="font-serif italic text-lg text-text-base mb-4">Info de la boda</h2>
           <p className="text-text-muted text-sm mb-4">

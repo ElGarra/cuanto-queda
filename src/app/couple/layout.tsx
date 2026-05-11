@@ -37,9 +37,11 @@ export default async function CoupleLayout({ children }: { children: React.React
   })
 
   const features = { gifts: wedding?.giftsEnabled ?? true, rsvp: wedding?.rsvpEnabled ?? true }
-  const nav = BASE_NAV.filter(({ feature }) =>
-    !feature || features[feature as keyof typeof features]
-  )
+  const nav = BASE_NAV.map(({ href, label, feature }) => ({
+    href,
+    label,
+    locked: feature ? !features[feature as keyof typeof features] : false,
+  }))
 
   return (
     <SessionProvider>
@@ -58,10 +60,19 @@ export default async function CoupleLayout({ children }: { children: React.React
                 : (session.user.name ?? 'Panel')}
             </span>
             <nav className="hidden sm:flex gap-4">
-              {nav.map(({ href, label }) => (
+              {nav.map(({ href, label, locked }) => (
                 <Link key={href} href={href}
-                  className="text-xs tracking-[0.15em] uppercase text-text-muted hover:text-gold transition-colors">
+                  className={`text-xs tracking-[0.15em] uppercase transition-colors flex items-center gap-1 ${
+                    locked
+                      ? 'text-text-muted/40 hover:text-text-muted/70'
+                      : 'text-text-muted hover:text-gold'
+                  }`}>
                   {label}
+                  {locked && (
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+                    </svg>
+                  )}
                 </Link>
               ))}
             </nav>
